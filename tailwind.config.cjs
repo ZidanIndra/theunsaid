@@ -5,7 +5,8 @@ module.exports = {
     extend: {
       fontFamily: {
         serif: ["Playfair Display", "Georgia", "serif"],
-        sans: ["Source Sans 3", "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ["Source Sans 3", "ui-sans-serif", "system-ui", "sans-serif"],
+        hand: ["Caveat", "cursive"]
       },
       keyframes: {
         fadeIn: {

@@ -6,6 +6,7 @@ import LandingPage from "./components/LandingPage.jsx";
 import NavBar from "./components/NavBar.jsx";
 import SubmitPage from "./components/SubmitPage.jsx";
 import SupportPage from "./components/SupportPage.jsx";
+import UserProfilePage from "./components/UserProfilePage.jsx";
 import useJournal from "./hooks/useJournal.js";
 
 export default function App() {
@@ -67,7 +68,7 @@ export default function App() {
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <NavBar />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage publicEntries={publicEntries} />} />
           <Route
             path="/submit"
             element={
@@ -95,6 +96,10 @@ export default function App() {
           <Route
             path="/browse"
             element={<BrowsePage publicEntries={publicEntries} />}
+          />
+          <Route
+            path="/user/:nickname"
+            element={<UserProfilePage publicEntries={publicEntries} />}
           />
           <Route path="/support" element={<SupportPage />} />
         </Routes>

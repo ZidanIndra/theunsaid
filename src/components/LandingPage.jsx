@@ -1,7 +1,26 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Eye, PenLine } from "lucide-react";
 
-export default function LandingPage() {
+const toSnippet = (text, max = 120) => {
+  if (!text) return "";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max).trim()}...`;
+};
+
+export default function LandingPage({ publicEntries = [] }) {
+  const marqueeEntries = useMemo(() => {
+    if (!publicEntries.length) return [];
+    const pool = [...publicEntries];
+    pool.sort(() => 0.5 - Math.random());
+    return pool.slice(0, Math.min(pool.length, 10));
+  }, [publicEntries]);
+
+  const marqueeLoop = useMemo(
+    () => (marqueeEntries.length ? [...marqueeEntries, ...marqueeEntries] : []),
+    [marqueeEntries]
+  );
+
   return (
     <main className="min-h-screen px-6 py-20">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-16 text-center animate-fade-in">
@@ -64,6 +83,43 @@ export default function LandingPage() {
               Keep timelines and snapshots to revisit when you need them.
             </p>
           </div>
+        </section>
+
+        <section className="w-full rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6">
+          <div className="mb-4 flex items-center justify-between text-left">
+            <span className="text-xs uppercase tracking-[0.35em] text-zinc-500">
+              The Public Void
+            </span>
+            <Link
+              to="/browse"
+              className="text-xs uppercase tracking-[0.25em] text-zinc-400 transition hover:text-zinc-200"
+            >
+              Browse
+            </Link>
+          </div>
+          {marqueeLoop.length ? (
+            <div className="overflow-hidden">
+              <div className="flex w-max gap-4 animate-marquee">
+                {marqueeLoop.map((entry, index) => (
+                  <div
+                    key={`${entry.id}-${index}`}
+                    className="min-w-[240px] rounded-xl border border-zinc-800/60 bg-zinc-900/60 p-4 text-left"
+                  >
+                    <p className="mb-3 text-sm text-zinc-200">
+                      {toSnippet(entry.text)}
+                    </p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+                      {entry.author || entry.authorId?.split("#")[0]}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-left text-sm text-zinc-500">
+              The public void is quiet for now.
+            </p>
+          )}
         </section>
       </div>
     </main>
