@@ -5,12 +5,6 @@ import { Search } from "lucide-react";
 const INITIAL_USER_BATCH = 6;
 const USER_BATCH_SIZE = 4;
 
-const toSnippet = (text, max = 160) => {
-  if (!text) return "";
-  if (text.length <= max) return text;
-  return `${text.slice(0, max).trim()}...`;
-};
-
 const normalizeNickname = (value) => (value || "").trim().toLowerCase();
 
 const getNicknameFromId = (authorId) => {
@@ -55,10 +49,12 @@ export default function BrowsePage({ publicEntries = [] }) {
         map.set(authorId, {
           id: authorId,
           nickname,
-          latestEntry: entry
+          latestEntry: entry,
+          entries: [entry]
         });
         return;
       }
+      existing.entries.push(entry);
       const existingDate =
         existing.latestEntry.publicAt || existing.latestEntry.createdAt;
       const nextDate = entry.publicAt || entry.createdAt;
@@ -67,7 +63,17 @@ export default function BrowsePage({ publicEntries = [] }) {
       }
     });
 
-    const cards = Array.from(map.values());
+    const cards = Array.from(map.values()).map((card) => {
+      const sortedEntries = [...card.entries].sort(
+        (a, b) =>
+          new Date(a.publicAt || a.createdAt) -
+          new Date(b.publicAt || b.createdAt)
+      );
+      return {
+        ...card,
+        entriesSorted: sortedEntries
+      };
+    });
     return cards.sort((a, b) => {
       const aDate = a.latestEntry.publicAt || a.latestEntry.createdAt;
       const bDate = b.latestEntry.publicAt || b.latestEntry.createdAt;
@@ -141,21 +147,33 @@ export default function BrowsePage({ publicEntries = [] }) {
             </p>
           </section>
         ) : (
-          <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {visibleCards.map((card) => (
               <Link
                 key={card.id}
                 to={`/user/${encodeURIComponent(card.nickname)}`}
                 state={{ authorId: card.id }}
-                className="group flex aspect-[3/4] flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-left transition hover:border-zinc-600"
+                className="group flex flex-col gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-left transition hover:border-zinc-600"
               >
                 <span className="inline-flex w-fit items-center rounded-full bg-zinc-200/10 px-3 py-1 text-xs text-zinc-300">
                   From: {card.nickname}
                 </span>
-                <div className="flex flex-1 items-center justify-center px-2 text-center">
-                  <p className="note-clamp font-hand text-2xl text-zinc-100">
-                    {toSnippet(card.latestEntry.text)}
-                  </p>
+                <div className="flex flex-col gap-3">
+                  {card.entriesSorted.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-3"
+                    >
+                      <p className="text-sm font-serif leading-relaxed text-zinc-100">
+                        {entry.text}
+                      </p>
+                      <p className="mt-3 text-xs uppercase tracking-[0.3em] text-zinc-500">
+                        {new Date(
+                          entry.publicAt || entry.createdAt
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
                 </div>
                 <div className="rounded-lg bg-black/40 px-3 py-2 text-xs uppercase tracking-[0.3em] text-zinc-400">
                   Read Full Story
