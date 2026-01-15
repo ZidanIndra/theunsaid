@@ -57,9 +57,11 @@ export default function useJournal() {
     const entries = [];
     Object.values(journals).forEach((user) => {
       (user.entries || []).forEach((entry) => {
-        if (entry.public) {
+        const isPublic = entry.isPublic ?? entry.public;
+        if (isPublic) {
           entries.push({
             ...entry,
+            isPublic: true,
             author: user.nickname,
             authorId: user.id
           });
@@ -157,7 +159,7 @@ export default function useJournal() {
     setCurrentUserId(null);
   };
 
-  const addEntry = (text) => {
+  const addEntry = (text, isPublic = false) => {
     const cleanText = (text || "").trim();
     if (!cleanText) {
       return { ok: false, error: "Write something before saving." };
@@ -171,8 +173,8 @@ export default function useJournal() {
       id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       text: cleanText,
       createdAt: new Date().toISOString(),
-      public: false,
-      publicAt: null
+      isPublic: Boolean(isPublic),
+      publicAt: isPublic ? new Date().toISOString() : null
     };
 
     setJournals((prev) => {
@@ -191,25 +193,20 @@ export default function useJournal() {
     return { ok: true, entry };
   };
 
-  const publishEntry = (entryId) => {
+  const updateEntryVisibility = (entryId, isPublic) => {
     if (!currentUserId || !journals[currentUserId]) {
       return { ok: false, error: "No active journal found." };
     }
 
     const current = journals[currentUserId];
-    const existingEntry = (current.entries || []).find(
-      (entry) => entry.id === entryId
-    );
-
-    if (!existingEntry) {
+    const target = (current.entries || []).find((entry) => entry.id === entryId);
+    if (!target) {
       return { ok: false, error: "Entry not found." };
     }
 
-    if (existingEntry.public) {
-      return { ok: false, error: "Entry is already public." };
-    }
-
-    const publishedAt = new Date().toISOString();
+    const nextPublicAt = isPublic
+      ? target.publicAt || new Date().toISOString()
+      : null;
 
     setJournals((prev) => {
       const user = prev[currentUserId];
@@ -221,9 +218,39 @@ export default function useJournal() {
           ...user,
           entries: (user.entries || []).map((entry) =>
             entry.id === entryId
-              ? { ...entry, public: true, publicAt: publishedAt }
+              ? {
+                  ...entry,
+                  isPublic: Boolean(isPublic),
+                  publicAt: nextPublicAt
+                }
               : entry
           )
+        }
+      };
+    });
+
+    return { ok: true };
+  };
+
+  const publishAllEntries = () => {
+    if (!currentUserId || !journals[currentUserId]) {
+      return { ok: false, error: "No active journal found." };
+    }
+
+    const now = new Date().toISOString();
+    setJournals((prev) => {
+      const user = prev[currentUserId];
+      if (!user) return prev;
+
+      return {
+        ...prev,
+        [currentUserId]: {
+          ...user,
+          entries: (user.entries || []).map((entry) => ({
+            ...entry,
+            isPublic: true,
+            publicAt: entry.publicAt || now
+          }))
         }
       };
     });
@@ -240,6 +267,7 @@ export default function useJournal() {
     setActiveUser,
     logout,
     addEntry,
-    publishEntry
+    updateEntryVisibility,
+    publishAllEntries
   };
 }
