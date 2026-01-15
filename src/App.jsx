@@ -10,7 +10,9 @@ export default function App() {
     loginUser,
     setActiveUser,
     logout,
-    addEntry
+    addEntry,
+    publishEntry,
+    publicEntries
   } = useJournal();
   const [registerError, setRegisterError] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -50,6 +52,7 @@ export default function App() {
   };
 
   const handleAddEntry = (text) => addEntry(text);
+  const handlePublishEntry = (entryId) => publishEntry(entryId);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -58,6 +61,7 @@ export default function App() {
           user={currentUser}
           entries={currentUser.entries || []}
           onAddEntry={handleAddEntry}
+          onPublishEntry={handlePublishEntry}
           onLogout={handleLogout}
         />
       ) : (
@@ -66,6 +70,7 @@ export default function App() {
           onLogin={handleLogin}
           registerError={registerError}
           loginError={loginError}
+          publicEntries={publicEntries}
           keyCardUser={keyCardUser}
           onProceed={handleProceed}
         />

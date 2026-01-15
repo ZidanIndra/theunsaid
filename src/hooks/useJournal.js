@@ -53,6 +53,27 @@ export default function useJournal() {
     return journals[currentUserId] || null;
   }, [journals, currentUserId]);
 
+  const publicEntries = useMemo(() => {
+    const entries = [];
+    Object.values(journals).forEach((user) => {
+      (user.entries || []).forEach((entry) => {
+        if (entry.public) {
+          entries.push({
+            ...entry,
+            author: user.nickname,
+            authorId: user.id
+          });
+        }
+      });
+    });
+
+    return entries.sort(
+      (a, b) =>
+        new Date(b.publicAt || b.createdAt) -
+        new Date(a.publicAt || a.createdAt)
+    );
+  }, [journals]);
+
   useEffect(() => {
     saveJournals(journals);
   }, [journals]);
@@ -149,7 +170,9 @@ export default function useJournal() {
     const entry = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       text: cleanText,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      public: false,
+      publicAt: null
     };
 
     setJournals((prev) => {
@@ -168,13 +191,55 @@ export default function useJournal() {
     return { ok: true, entry };
   };
 
+  const publishEntry = (entryId) => {
+    if (!currentUserId || !journals[currentUserId]) {
+      return { ok: false, error: "No active journal found." };
+    }
+
+    const current = journals[currentUserId];
+    const existingEntry = (current.entries || []).find(
+      (entry) => entry.id === entryId
+    );
+
+    if (!existingEntry) {
+      return { ok: false, error: "Entry not found." };
+    }
+
+    if (existingEntry.public) {
+      return { ok: false, error: "Entry is already public." };
+    }
+
+    const publishedAt = new Date().toISOString();
+
+    setJournals((prev) => {
+      const user = prev[currentUserId];
+      if (!user) return prev;
+
+      return {
+        ...prev,
+        [currentUserId]: {
+          ...user,
+          entries: (user.entries || []).map((entry) =>
+            entry.id === entryId
+              ? { ...entry, public: true, publicAt: publishedAt }
+              : entry
+          )
+        }
+      };
+    });
+
+    return { ok: true };
+  };
+
   return {
     journals,
     currentUser,
+    publicEntries,
     createUser,
     loginUser,
     setActiveUser,
     logout,
-    addEntry
+    addEntry,
+    publishEntry
   };
 }
