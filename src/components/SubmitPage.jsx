@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { KeyRound, PenLine } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
@@ -11,6 +12,10 @@ export default function SubmitPage({
   onProceed
 }) {
   const { t } = useLanguage();
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
   const [newNickname, setNewNickname] = useState("");
   const [loginNickname, setLoginNickname] = useState("");
   const [loginHash, setLoginHash] = useState("");
@@ -63,12 +68,13 @@ export default function SubmitPage({
                   {t(registerError)}
                 </p>
               ) : null}
-              <button
+              <motion.button
                 type="submit"
+                {...buttonMotion}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
               >
                 {t("submit_create_btn")}
-              </button>
+              </motion.button>
             </form>
           </div>
 
@@ -106,12 +112,13 @@ export default function SubmitPage({
               {loginError ? (
                 <p className="text-sm text-rose-400">{t(loginError)}</p>
               ) : null}
-              <button
+              <motion.button
                 type="submit"
+                {...buttonMotion}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-transparent px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:text-white"
               >
                 {t("submit_login_btn")}
-              </button>
+              </motion.button>
             </form>
           </div>
         </section>
@@ -128,13 +135,14 @@ export default function SubmitPage({
             <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-center font-mono text-lg text-zinc-100">
               {keyCardUser.id}
             </div>
-            <button
+            <motion.button
               type="button"
               onClick={onProceed}
+              {...buttonMotion}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
             >
               {t("keycard_proceed")}
-            </button>
+            </motion.button>
           </div>
         </div>
       ) : null}

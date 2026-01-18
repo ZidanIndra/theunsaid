@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
@@ -8,6 +9,11 @@ export default function NavBar() {
     { label: t("nav_browse"), to: "/browse" },
     { label: t("nav_support"), to: "/support" }
   ];
+
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
 
   return (
     <nav className="w-full border-b border-zinc-900/80 bg-zinc-950/80 backdrop-blur">
@@ -29,9 +35,10 @@ export default function NavBar() {
               {item.label}
             </NavLink>
           ))}
-          <button
+          <motion.button
             type="button"
             onClick={toggleLanguage}
+            {...buttonMotion}
             className="flex items-center gap-2 rounded-full border border-zinc-800 px-3 py-1 text-xs uppercase tracking-[0.3em] text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
             aria-label="Toggle language"
           >
@@ -42,7 +49,7 @@ export default function NavBar() {
             <span className={language === "en" ? "text-zinc-100" : ""}>
               {t("nav_lang_en")}
             </span>
-          </button>
+          </motion.button>
         </div>
       </div>
     </nav>

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
 import { Camera, Globe, LogOut, Save, Settings } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
+import Toast from "./Toast.jsx";
 
 const formatTimestamp = (value) => {
   if (!value) return "";
@@ -24,14 +26,30 @@ export default function Dashboard({
   const [sharingId, setSharingId] = useState(null);
   const [shareError, setShareError] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeout = setTimeout(() => {
+      setToastMessage("");
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [toastMessage]);
 
   const handleSave = (event) => {
     event.preventDefault();
     const result = onAddEntry(text, isPublic);
     if (!result.ok) {
-      setError(result.error);
       if (result.error === "error_restricted_words") {
-        alert(t("restricted_words_alert"));
+        setToastMessage(t("restricted_words_alert"));
+        setError("");
+      } else {
+        setError(result.error);
       }
       return;
     }
@@ -87,6 +105,7 @@ export default function Dashboard({
 
   return (
     <main className="min-h-screen px-6 py-10">
+      <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 animate-fade-in">
         <header className="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 md:flex-row md:items-center md:justify-between">
           <div>
@@ -97,14 +116,15 @@ export default function Dashboard({
               {t("journal_welcome", { id: user.id })}
             </h2>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={onLogout}
+            {...buttonMotion}
             className="flex items-center gap-2 self-start rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-200 transition hover:border-zinc-500 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
             {t("journal_logout")}
-          </button>
+          </motion.button>
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
@@ -126,9 +146,10 @@ export default function Dashboard({
                     <Globe className="h-4 w-4 text-zinc-400" />
                     {t("journal_release_label")}
                   </div>
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setIsPublic((value) => !value)}
+                    {...buttonMotion}
                     className={`relative h-6 w-11 rounded-full border transition ${
                       isPublic
                         ? "border-emerald-400/60 bg-emerald-400/20"
@@ -141,18 +162,19 @@ export default function Dashboard({
                         isPublic ? "left-[22px]" : "left-0.5"
                       }`}
                     />
-                  </button>
+                  </motion.button>
                 </div>
                 {error ? (
                   <p className="text-sm text-rose-400">{t(error)}</p>
                 ) : null}
-                <button
+                <motion.button
                   type="submit"
+                  {...buttonMotion}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
                 >
                   <Save className="h-4 w-4" />
                   {t("journal_save_btn")}
-                </button>
+                </motion.button>
               </form>
             </div>
 
@@ -171,13 +193,14 @@ export default function Dashboard({
                   {t(bulkStatus)}
                 </p>
               ) : null}
-              <button
+              <motion.button
                 type="button"
                 onClick={handlePublishAll}
+                {...buttonMotion}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:text-white"
               >
                 {t("settings_publish_all")}
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -204,42 +227,44 @@ export default function Dashboard({
                   return (
                     <div key={entry.id} className="space-y-3">
                       <article className="animate-fade-in rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs tracking-[0.2em] text-zinc-500">
-                          {t("public_label")}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleToggleVisibility(entry.id, !entryIsPublic)
-                          }
-                          className={`relative h-5 w-9 rounded-full border transition ${
-                            entryIsPublic
-                              ? "border-emerald-400/60 bg-emerald-400/20"
-                              : "border-zinc-700 bg-zinc-900"
-                          }`}
-                          aria-pressed={entryIsPublic}
-                        >
-                          <span
-                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-zinc-100 transition ${
-                              entryIsPublic ? "left-[18px]" : "left-0.5"
-                            }`}
-                          />
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleShare(entry)}
-                        disabled={sharingId === entry.id}
-                        className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs uppercase tracking-[0.2em] text-zinc-200 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <Camera className="h-3.5 w-3.5" />
-                        {sharingId === entry.id
-                          ? t("share_rendering")
-                          : t("share_button")}
-                      </button>
-                    </div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs tracking-[0.2em] text-zinc-500">
+                              {t("public_label")}
+                            </span>
+                            <motion.button
+                              type="button"
+                              onClick={() =>
+                                handleToggleVisibility(entry.id, !entryIsPublic)
+                              }
+                              {...buttonMotion}
+                              className={`relative h-5 w-9 rounded-full border transition ${
+                                entryIsPublic
+                                  ? "border-emerald-400/60 bg-emerald-400/20"
+                                  : "border-zinc-700 bg-zinc-900"
+                              }`}
+                              aria-pressed={entryIsPublic}
+                            >
+                              <span
+                                className={`absolute top-0.5 h-4 w-4 rounded-full bg-zinc-100 transition ${
+                                  entryIsPublic ? "left-[18px]" : "left-0.5"
+                                }`}
+                              />
+                            </motion.button>
+                          </div>
+                          <motion.button
+                            type="button"
+                            onClick={() => handleShare(entry)}
+                            disabled={sharingId === entry.id}
+                            {...buttonMotion}
+                            className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs uppercase tracking-[0.2em] text-zinc-200 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Camera className="h-3.5 w-3.5" />
+                            {sharingId === entry.id
+                              ? t("share_rendering")
+                              : t("share_button")}
+                          </motion.button>
+                        </div>
                         <p className="mb-3 whitespace-pre-wrap text-sm text-zinc-200">
                           {entry.text}
                         </p>

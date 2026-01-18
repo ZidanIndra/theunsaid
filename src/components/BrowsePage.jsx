@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
@@ -15,6 +16,28 @@ const getNicknameFromId = (authorId, fallbackName) => {
 
 export default function BrowsePage({ publicEntries = [] }) {
   const { t } = useLanguage();
+  const MotionLink = motion(Link);
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
+  const containerMotion = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  };
+  const cardMotion = {
+    hidden: { opacity: 0, y: 14, scale: 0.98 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.35, ease: "easeOut" }
+    }
+  };
   const [query, setQuery] = useState("");
   const [visibleUsers, setVisibleUsers] = useState(INITIAL_USER_BATCH);
   const sentinelRef = useRef(null);
@@ -151,12 +174,18 @@ export default function BrowsePage({ publicEntries = [] }) {
             </p>
           </section>
         ) : (
-          <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <motion.section
+            className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
+            variants={containerMotion}
+            initial="hidden"
+            animate="visible"
+          >
             {visibleCards.map((card) => (
-              <Link
+              <MotionLink
                 key={card.id}
                 to={`/user/${encodeURIComponent(card.nickname)}`}
                 state={{ authorId: card.id }}
+                variants={cardMotion}
                 className="group flex flex-col gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-left transition hover:border-zinc-600"
               >
                 <span className="inline-flex w-fit items-center rounded-full bg-zinc-200/10 px-3 py-1 text-xs text-zinc-300">
@@ -182,20 +211,21 @@ export default function BrowsePage({ publicEntries = [] }) {
                 <div className="rounded-lg bg-black/40 px-3 py-2 text-xs uppercase tracking-[0.3em] text-zinc-400">
                   {t("browse_read_full")}
                 </div>
-              </Link>
+              </MotionLink>
             ))}
-          </section>
+          </motion.section>
         )}
 
         <div ref={sentinelRef} className="flex justify-center">
           {visibleUsers < userCards.length ? (
-            <button
+            <motion.button
               type="button"
               onClick={loadMore}
+              {...buttonMotion}
               className="rounded-xl border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-200 transition hover:border-zinc-500 hover:text-white"
             >
               {t("browse_load_more")}
-            </button>
+            </motion.button>
           ) : null}
         </div>
       </div>

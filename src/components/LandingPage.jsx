@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { BookOpen, Eye, PenLine } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
@@ -11,6 +12,11 @@ const toSnippet = (text, max = 120) => {
 
 export default function LandingPage({ publicEntries = [] }) {
   const { t } = useLanguage();
+  const MotionLink = motion(Link);
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
   const marqueeEntries = useMemo(() => {
     if (!publicEntries.length) return [];
     const pool = [...publicEntries];
@@ -33,25 +39,45 @@ export default function LandingPage({ publicEntries = [] }) {
               {t("hero_kicker")}
             </span>
           </div>
-          <h1 className="mx-auto max-w-3xl font-serif text-4xl text-zinc-100 md:text-6xl">
-            {t("hero_title")}
-          </h1>
-          <p className="mx-auto max-w-2xl text-base text-zinc-400 md:text-lg">
-            {t("hero_subtitle")}
-          </p>
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={t("hero_title")}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="mx-auto max-w-3xl font-serif text-4xl text-zinc-100 md:text-6xl"
+            >
+              {t("hero_title")}
+            </motion.h1>
+          </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={t("hero_subtitle")}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="mx-auto max-w-2xl text-base text-zinc-400 md:text-lg"
+            >
+              {t("hero_subtitle")}
+            </motion.p>
+          </AnimatePresence>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
+            <MotionLink
               to="/submit"
+              {...buttonMotion}
               className="flex items-center justify-center rounded-full bg-zinc-100 px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
             >
               {t("btn_write")}
-            </Link>
-            <Link
+            </MotionLink>
+            <MotionLink
               to="/browse"
+              {...buttonMotion}
               className="flex items-center justify-center rounded-full border border-zinc-700 px-6 py-3 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:text-white"
             >
               {t("btn_browse")}
-            </Link>
+            </MotionLink>
           </div>
         </div>
 

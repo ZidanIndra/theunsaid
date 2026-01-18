@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
@@ -6,6 +7,11 @@ const normalizeNickname = (value) => (value || "").trim().toLowerCase();
 
 export default function UserProfilePage({ publicEntries = [] }) {
   const { t } = useLanguage();
+  const MotionLink = motion(Link);
+  const buttonMotion = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 }
+  };
   const { nickname } = useParams();
   const location = useLocation();
   const decodedNickname = decodeURIComponent(nickname || "");
@@ -45,12 +51,13 @@ export default function UserProfilePage({ publicEntries = [] }) {
           <p className="text-base text-zinc-400 md:text-lg">
             {t("user_count", { count: sortedEntries.length })}
           </p>
-          <Link
+          <MotionLink
             to="/browse"
+            {...buttonMotion}
             className="text-xs uppercase tracking-[0.3em] text-zinc-400 transition hover:text-zinc-200"
           >
             {t("user_back")}
-          </Link>
+          </MotionLink>
         </header>
 
         {sortedEntries.length === 0 ? (
