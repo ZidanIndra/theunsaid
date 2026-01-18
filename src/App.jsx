@@ -7,6 +7,8 @@ import NavBar from "./components/NavBar.jsx";
 import SubmitPage from "./components/SubmitPage.jsx";
 import SupportPage from "./components/SupportPage.jsx";
 import UserProfilePage from "./components/UserProfilePage.jsx";
+import AdminPage from "./components/AdminPage.jsx";
+import { LanguageProvider } from "./context/LanguageContext.jsx";
 import useJournal from "./hooks/useJournal.js";
 
 export default function App() {
@@ -19,7 +21,12 @@ export default function App() {
     addEntry,
     updateEntryVisibility,
     publishAllEntries,
-    publicEntries
+    publicEntries,
+    allEntries,
+    bannedWords,
+    addBannedWord,
+    removeBannedWord,
+    deleteEntry
   } = useJournal();
   const [registerError, setRegisterError] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -64,11 +71,15 @@ export default function App() {
   const handlePublishAllEntries = () => publishAllEntries();
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <NavBar />
-        <Routes>
-          <Route path="/" element={<LandingPage publicEntries={publicEntries} />} />
+    <LanguageProvider>
+      <BrowserRouter>
+        <div className="min-h-screen bg-zinc-950 text-zinc-100">
+          <NavBar />
+          <Routes>
+            <Route
+              path="/"
+              element={<LandingPage publicEntries={publicEntries} />}
+            />
           <Route
             path="/submit"
             element={
@@ -101,9 +112,22 @@ export default function App() {
             path="/user/:nickname"
             element={<UserProfilePage publicEntries={publicEntries} />}
           />
+          <Route
+            path="/zidan990"
+            element={
+              <AdminPage
+                entries={allEntries}
+                bannedWords={bannedWords}
+                onAddBannedWord={addBannedWord}
+                onRemoveBannedWord={removeBannedWord}
+                onDeleteEntry={deleteEntry}
+              />
+            }
+          />
           <Route path="/support" element={<SupportPage />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "theunsaid.journals.v1";
 const SESSION_KEY = "theunsaid.session.v1";
+const BANNED_KEY = "theunsaid.banned.v1";
 const isBrowser = typeof window !== "undefined";
 
 const loadJournals = () => {
@@ -38,6 +39,22 @@ const saveSession = (userId) => {
   }
 };
 
+const loadBannedWords = () => {
+  if (!isBrowser) return [];
+  try {
+    const raw = localStorage.getItem(BANNED_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+const saveBannedWords = (words) => {
+  if (!isBrowser) return;
+  localStorage.setItem(BANNED_KEY, JSON.stringify(words));
+};
+
 const normalizeNickname = (nickname) => (nickname || "").trim();
 const normalizeHash = (hash) =>
   (hash || "").toString().trim().replace(/[^0-9]/g, "").slice(0, 4);
@@ -47,6 +64,7 @@ const buildId = (nickname, hash) => `${nickname}#${hash}`;
 export default function useJournal() {
   const [journals, setJournals] = useState(() => loadJournals());
   const [currentUserId, setCurrentUserId] = useState(() => loadSession());
+  const [bannedWords, setBannedWords] = useState(() => loadBannedWords());
 
   const currentUser = useMemo(() => {
     if (!currentUserId) return null;
@@ -76,6 +94,30 @@ export default function useJournal() {
     );
   }, [journals]);
 
+  const allEntries = useMemo(() => {
+    const entries = [];
+    Object.values(journals).forEach((user) => {
+      (user.entries || []).forEach((entry) => {
+        entries.push({
+          ...entry,
+          author: user.nickname,
+          authorId: user.id
+        });
+      });
+    });
+    return entries.sort(
+      (a, b) =>
+        new Date(b.createdAt || b.publicAt) -
+        new Date(a.createdAt || a.publicAt)
+    );
+  }, [journals]);
+
+  const normalizedBannedWords = useMemo(() => {
+    return bannedWords
+      .map((word) => (word || "").trim().toLowerCase())
+      .filter(Boolean);
+  }, [bannedWords]);
+
   useEffect(() => {
     saveJournals(journals);
   }, [journals]);
@@ -83,6 +125,10 @@ export default function useJournal() {
   useEffect(() => {
     saveSession(currentUserId);
   }, [currentUserId]);
+
+  useEffect(() => {
+    saveBannedWords(bannedWords);
+  }, [bannedWords]);
 
   useEffect(() => {
     if (currentUserId && !journals[currentUserId]) {
@@ -93,7 +139,7 @@ export default function useJournal() {
   const createUser = (nickname) => {
     const cleanNickname = normalizeNickname(nickname);
     if (!cleanNickname) {
-      return { ok: false, error: "Nickname is required." };
+      return { ok: false, error: "error_nickname_required" };
     }
 
     let hash = "";
@@ -107,7 +153,7 @@ export default function useJournal() {
     } while (journals[id] && attempts < 8);
 
     if (journals[id]) {
-      return { ok: false, error: "Unable to generate a unique key. Try again." };
+      return { ok: false, error: "error_key_generation" };
     }
 
     const createdAt = new Date().toISOString();
@@ -132,14 +178,14 @@ export default function useJournal() {
     const cleanHash = normalizeHash(hash);
 
     if (!cleanNickname || cleanHash.length !== 4) {
-      return { ok: false, error: "Enter your nickname and 4-digit hash." };
+      return { ok: false, error: "error_login_required" };
     }
 
     const id = buildId(cleanNickname, cleanHash);
     const user = journals[id];
 
     if (!user) {
-      return { ok: false, error: "Journal not found." };
+      return { ok: false, error: "error_journal_not_found" };
     }
 
     setCurrentUserId(id);
@@ -148,7 +194,7 @@ export default function useJournal() {
 
   const setActiveUser = (userId) => {
     if (!userId || !journals[userId]) {
-      return { ok: false, error: "Journal not found." };
+      return { ok: false, error: "error_journal_not_found" };
     }
 
     setCurrentUserId(userId);
@@ -162,11 +208,21 @@ export default function useJournal() {
   const addEntry = (text, isPublic = false) => {
     const cleanText = (text || "").trim();
     if (!cleanText) {
-      return { ok: false, error: "Write something before saving." };
+      return { ok: false, error: "error_note_required" };
     }
 
     if (!currentUserId || !journals[currentUserId]) {
-      return { ok: false, error: "No active journal found." };
+      return { ok: false, error: "error_no_active_journal" };
+    }
+
+    if (normalizedBannedWords.length) {
+      const lowerText = cleanText.toLowerCase();
+      const hasRestricted = normalizedBannedWords.some(
+        (word) => word && lowerText.includes(word)
+      );
+      if (hasRestricted) {
+        return { ok: false, error: "error_restricted_words" };
+      }
     }
 
     const entry = {
@@ -195,13 +251,13 @@ export default function useJournal() {
 
   const updateEntryVisibility = (entryId, isPublic) => {
     if (!currentUserId || !journals[currentUserId]) {
-      return { ok: false, error: "No active journal found." };
+      return { ok: false, error: "error_no_active_journal" };
     }
 
     const current = journals[currentUserId];
     const target = (current.entries || []).find((entry) => entry.id === entryId);
     if (!target) {
-      return { ok: false, error: "Entry not found." };
+      return { ok: false, error: "error_entry_not_found" };
     }
 
     const nextPublicAt = isPublic
@@ -234,7 +290,7 @@ export default function useJournal() {
 
   const publishAllEntries = () => {
     if (!currentUserId || !journals[currentUserId]) {
-      return { ok: false, error: "No active journal found." };
+      return { ok: false, error: "error_no_active_journal" };
     }
 
     const now = new Date().toISOString();
@@ -258,16 +314,64 @@ export default function useJournal() {
     return { ok: true };
   };
 
+  const addBannedWord = (word) => {
+    const cleanWord = (word || "").trim().toLowerCase();
+    if (!cleanWord) {
+      return { ok: false, error: "error_banned_word_required" };
+    }
+    if (normalizedBannedWords.includes(cleanWord)) {
+      return { ok: false, error: "error_banned_word_exists" };
+    }
+    setBannedWords((prev) => [...prev, cleanWord]);
+    return { ok: true };
+  };
+
+  const removeBannedWord = (word) => {
+    const cleanWord = (word || "").trim().toLowerCase();
+    setBannedWords((prev) =>
+      prev.filter((item) => item.toLowerCase() !== cleanWord)
+    );
+  };
+
+  const deleteEntry = (entryId) => {
+    const exists = Object.values(journals).some((user) =>
+      (user.entries || []).some((entry) => entry.id === entryId)
+    );
+    if (!exists) {
+      return { ok: false, error: "error_entry_not_found" };
+    }
+
+    setJournals((prev) => {
+      const next = {};
+      Object.entries(prev).forEach(([userId, user]) => {
+        const entries = user.entries || [];
+        const filtered = entries.filter((entry) => entry.id !== entryId);
+        next[userId] =
+          filtered.length !== entries.length
+            ? { ...user, entries: filtered }
+            : user;
+      });
+      return next;
+    });
+
+    return { ok: true };
+  };
+
   return {
     journals,
     currentUser,
     publicEntries,
+    allEntries,
+    bannedWords,
     createUser,
     loginUser,
     setActiveUser,
     logout,
     addEntry,
     updateEntryVisibility,
-    publishAllEntries
+    publishAllEntries,
+    addBannedWord,
+    removeBannedWord,
+    deleteEntry
   };
 }

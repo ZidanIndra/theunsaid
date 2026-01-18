@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext.jsx";
 
 const normalizeNickname = (value) => (value || "").trim().toLowerCase();
 
 export default function UserProfilePage({ publicEntries = [] }) {
+  const { t } = useLanguage();
   const { nickname } = useParams();
   const location = useLocation();
   const decodedNickname = decodeURIComponent(nickname || "");
@@ -35,26 +37,26 @@ export default function UserProfilePage({ publicEntries = [] }) {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 animate-fade-in">
         <header className="space-y-3 text-center">
           <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-            Public Journal
+            {t("user_kicker")}
           </p>
           <h1 className="font-serif text-4xl text-zinc-100 md:text-5xl">
             {displayName}
           </h1>
           <p className="text-base text-zinc-400 md:text-lg">
-            {sortedEntries.length} public notes from this journal.
+            {t("user_count", { count: sortedEntries.length })}
           </p>
           <Link
             to="/browse"
             className="text-xs uppercase tracking-[0.3em] text-zinc-400 transition hover:text-zinc-200"
           >
-            Back to Browse
+            {t("user_back")}
           </Link>
         </header>
 
         {sortedEntries.length === 0 ? (
           <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-center">
             <p className="text-sm text-zinc-500">
-              No public notes available for this user.
+              {t("user_empty")}
             </p>
           </section>
         ) : (

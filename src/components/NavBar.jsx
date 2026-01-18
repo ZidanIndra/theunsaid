@@ -1,12 +1,14 @@
 import { NavLink } from "react-router-dom";
-
-const navItems = [
-  { label: "Submit Note", to: "/submit" },
-  { label: "Browse", to: "/browse" },
-  { label: "Support", to: "/support" }
-];
+import { useLanguage } from "../context/LanguageContext.jsx";
 
 export default function NavBar() {
+  const { language, toggleLanguage, t } = useLanguage();
+  const navItems = [
+    { label: t("nav_submit"), to: "/submit" },
+    { label: t("nav_browse"), to: "/browse" },
+    { label: t("nav_support"), to: "/support" }
+  ];
+
   return (
     <nav className="w-full border-b border-zinc-900/80 bg-zinc-950/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
@@ -27,6 +29,20 @@ export default function NavBar() {
               {item.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 rounded-full border border-zinc-800 px-3 py-1 text-xs uppercase tracking-[0.3em] text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+            aria-label="Toggle language"
+          >
+            <span className={language === "id" ? "text-zinc-100" : ""}>
+              {t("nav_lang_id")}
+            </span>
+            <span className="text-zinc-600">|</span>
+            <span className={language === "en" ? "text-zinc-100" : ""}>
+              {t("nav_lang_en")}
+            </span>
+          </button>
         </div>
       </div>
     </nav>

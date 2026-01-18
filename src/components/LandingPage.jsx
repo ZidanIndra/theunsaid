@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Eye, PenLine } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext.jsx";
 
 const toSnippet = (text, max = 120) => {
   if (!text) return "";
@@ -9,6 +10,7 @@ const toSnippet = (text, max = 120) => {
 };
 
 export default function LandingPage({ publicEntries = [] }) {
+  const { t } = useLanguage();
   const marqueeEntries = useMemo(() => {
     if (!publicEntries.length) return [];
     const pool = [...publicEntries];
@@ -28,28 +30,27 @@ export default function LandingPage({ publicEntries = [] }) {
           <div className="inline-flex items-center gap-3 text-zinc-400">
             <BookOpen className="h-5 w-5" />
             <span className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-              The Unsaid
+              {t("hero_kicker")}
             </span>
           </div>
           <h1 className="mx-auto max-w-3xl font-serif text-4xl text-zinc-100 md:text-6xl">
-            A bunch of the untold words, floating between you and the dark.
+            {t("hero_title")}
           </h1>
           <p className="mx-auto max-w-2xl text-base text-zinc-400 md:text-lg">
-            Capture the notes you never sent, keep them safe, or release them to
-            the public void.
+            {t("hero_subtitle")}
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               to="/submit"
               className="flex items-center justify-center rounded-full bg-zinc-100 px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
             >
-              Tell Your Story
+              {t("btn_write")}
             </Link>
             <Link
               to="/browse"
               className="flex items-center justify-center rounded-full border border-zinc-700 px-6 py-3 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:text-white"
             >
-              Browse Stories
+              {t("btn_browse")}
             </Link>
           </div>
         </div>
@@ -58,29 +59,28 @@ export default function LandingPage({ publicEntries = [] }) {
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-left">
             <PenLine className="mb-4 h-5 w-5 text-zinc-200" />
             <h3 className="mb-2 font-serif text-xl text-zinc-100">
-              Share your Messages
+              {t("feature_share_title")}
             </h3>
             <p className="text-sm text-zinc-400">
-              Write for yourself or let the world read your most honest words.
+              {t("feature_share_desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-left">
             <Eye className="mb-4 h-5 w-5 text-zinc-200" />
             <h3 className="mb-2 font-serif text-xl text-zinc-100">
-              Browse Messages
+              {t("feature_browse_title")}
             </h3>
             <p className="text-sm text-zinc-400">
-              Discover fragments from other journals drifting in the public
-              void.
+              {t("feature_browse_desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-left">
             <BookOpen className="mb-4 h-5 w-5 text-zinc-200" />
             <h3 className="mb-2 font-serif text-xl text-zinc-100">
-              Detail Messages
+              {t("feature_detail_title")}
             </h3>
             <p className="text-sm text-zinc-400">
-              Keep timelines and snapshots to revisit when you need them.
+              {t("feature_detail_desc")}
             </p>
           </div>
         </section>
@@ -88,13 +88,13 @@ export default function LandingPage({ publicEntries = [] }) {
         <section className="w-full rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6">
           <div className="mb-4 flex items-center justify-between text-left">
             <span className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-              The Public Void
+              {t("public_void_title")}
             </span>
             <Link
               to="/browse"
               className="text-xs uppercase tracking-[0.25em] text-zinc-400 transition hover:text-zinc-200"
             >
-              Browse
+              {t("public_void_browse")}
             </Link>
           </div>
           {marqueeLoop.length ? (
@@ -117,7 +117,7 @@ export default function LandingPage({ publicEntries = [] }) {
             </div>
           ) : (
             <p className="text-left text-sm text-zinc-500">
-              The public void is quiet for now.
+              {t("public_void_empty")}
             </p>
           )}
         </section>

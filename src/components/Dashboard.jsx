@@ -1,6 +1,7 @@
 import { useState } from "react";
 import html2canvas from "html2canvas";
 import { Camera, Globe, LogOut, Save, Settings } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext.jsx";
 
 const formatTimestamp = (value) => {
   if (!value) return "";
@@ -16,6 +17,7 @@ export default function Dashboard({
   onPublishAll,
   onLogout
 }) {
+  const { t } = useLanguage();
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [isPublic, setIsPublic] = useState(false);
@@ -28,6 +30,9 @@ export default function Dashboard({
     const result = onAddEntry(text, isPublic);
     if (!result.ok) {
       setError(result.error);
+      if (result.error === "error_restricted_words") {
+        alert(t("restricted_words_alert"));
+      }
       return;
     }
     setError("");
@@ -50,13 +55,13 @@ export default function Dashboard({
       setBulkStatus(result.error);
       return;
     }
-    setBulkStatus("All notes are now public.");
+    setBulkStatus("publish_all_success");
   };
 
   const handleShare = async (entry) => {
     const snapshot = document.getElementById(`snapshot-${entry.id}`);
     if (!snapshot) {
-      setShareError("Snapshot template not found.");
+      setShareError("share_error_template");
       return;
     }
 
@@ -74,7 +79,7 @@ export default function Dashboard({
       link.download = `theunsaid-${entry.id}.png`;
       link.click();
     } catch (captureError) {
-      setShareError("Unable to generate image.");
+      setShareError("share_error_generate");
     } finally {
       setSharingId(null);
     }
@@ -86,10 +91,10 @@ export default function Dashboard({
         <header className="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-              The Journal
+              {t("journal_kicker")}
             </p>
             <h2 className="font-serif text-3xl text-zinc-100">
-              Welcome back, {user.id}
+              {t("journal_welcome", { id: user.id })}
             </h2>
           </div>
           <button
@@ -98,7 +103,7 @@ export default function Dashboard({
             className="flex items-center gap-2 self-start rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-200 transition hover:border-zinc-500 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {t("journal_logout")}
           </button>
         </header>
 
@@ -106,7 +111,7 @@ export default function Dashboard({
           <div className="space-y-6">
             <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6">
               <h3 className="mb-4 font-serif text-2xl text-zinc-100">
-                Write to the vault
+                {t("journal_write_title")}
               </h3>
               <form className="space-y-4" onSubmit={handleSave}>
                 <textarea
@@ -114,12 +119,12 @@ export default function Dashboard({
                   onChange={(event) => setText(event.target.value)}
                   rows={6}
                   className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 text-base text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
-                  placeholder="Let the unsaid spill here..."
+                  placeholder={t("journal_textarea_placeholder")}
                 />
                 <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3">
                   <div className="flex items-center gap-2 text-sm text-zinc-300">
                     <Globe className="h-4 w-4 text-zinc-400" />
-                    Release to Public Void
+                    {t("journal_release_label")}
                   </div>
                   <button
                     type="button"
@@ -139,14 +144,14 @@ export default function Dashboard({
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-sm text-rose-400">{error}</p>
+                  <p className="text-sm text-rose-400">{t(error)}</p>
                 ) : null}
                 <button
                   type="submit"
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-white"
                 >
                   <Save className="h-4 w-4" />
-                  Save to Vault
+                  {t("journal_save_btn")}
                 </button>
               </form>
             </div>
@@ -155,39 +160,43 @@ export default function Dashboard({
               <div className="mb-4 flex items-center gap-3 text-zinc-200">
                 <Settings className="h-5 w-5" />
                 <h3 className="font-serif text-2xl text-zinc-100">
-                  Settings
+                  {t("settings_title")}
                 </h3>
               </div>
               <p className="mb-4 text-sm text-zinc-400">
-                Manage the visibility of your entire timeline at once.
+                {t("settings_desc")}
               </p>
               {bulkStatus ? (
-                <p className="mb-4 text-sm text-emerald-300">{bulkStatus}</p>
+                <p className="mb-4 text-sm text-emerald-300">
+                  {t(bulkStatus)}
+                </p>
               ) : null}
               <button
                 type="button"
                 onClick={handlePublishAll}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:text-white"
               >
-                Make All My Notes Public
+                {t("settings_publish_all")}
               </button>
             </div>
           </div>
 
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-serif text-2xl text-zinc-100">Timeline</h3>
+              <h3 className="font-serif text-2xl text-zinc-100">
+                {t("timeline_title")}
+              </h3>
               <span className="text-xs uppercase tracking-[0.3em] text-zinc-500">
-                {entries.length} entries
+                {t("timeline_entries", { count: entries.length })}
               </span>
             </div>
             {shareError ? (
-              <p className="mb-4 text-sm text-rose-400">{shareError}</p>
+              <p className="mb-4 text-sm text-rose-400">{t(shareError)}</p>
             ) : null}
             <div className="space-y-4">
               {entries.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  The vault is empty. Write the first line.
+                  {t("timeline_empty")}
                 </p>
               ) : (
                 entries.map((entry) => {
@@ -198,7 +207,7 @@ export default function Dashboard({
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-xs tracking-[0.2em] text-zinc-500">
-                          Public
+                          {t("public_label")}
                         </span>
                         <button
                           type="button"
@@ -227,8 +236,8 @@ export default function Dashboard({
                       >
                         <Camera className="h-3.5 w-3.5" />
                         {sharingId === entry.id
-                          ? "Rendering..."
-                          : "Share / Save Image"}
+                          ? t("share_rendering")
+                          : t("share_button")}
                       </button>
                     </div>
                         <p className="mb-3 whitespace-pre-wrap text-sm text-zinc-200">
