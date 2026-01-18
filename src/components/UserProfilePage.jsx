@@ -73,7 +73,7 @@ export default function UserProfilePage({ publicEntries = [] }) {
                 key={entry.id}
                 className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6"
               >
-                <p className="mb-4 font-hand text-2xl text-zinc-100">
+                <p className="mb-4 font-serif text-2xl text-zinc-100">
                   {entry.text}
                 </p>
                 <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">

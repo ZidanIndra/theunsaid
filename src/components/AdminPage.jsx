@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext.jsx";
@@ -7,6 +7,22 @@ const toSnippet = (text, max = 140) => {
   if (!text) return "";
   if (text.length <= max) return text;
   return `${text.slice(0, max).trim()}...`;
+};
+
+const ADMIN_AUTH_KEY = "theunsaid.admin.auth.v1";
+
+const loadAdminAuth = () => {
+  if (typeof window === "undefined") return false;
+  return sessionStorage.getItem(ADMIN_AUTH_KEY) === "true";
+};
+
+const saveAdminAuth = (value) => {
+  if (typeof window === "undefined") return;
+  if (value) {
+    sessionStorage.setItem(ADMIN_AUTH_KEY, "true");
+  } else {
+    sessionStorage.removeItem(ADMIN_AUTH_KEY);
+  }
 };
 
 export default function AdminPage({
@@ -22,7 +38,7 @@ export default function AdminPage({
   const [bannedError, setBannedError] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(loadAdminAuth);
 
   const buttonMotion = {
     whileHover: { scale: 1.05 },
@@ -57,10 +73,15 @@ export default function AdminPage({
     if (password === "zidan990") {
       setIsAuthorized(true);
       setAuthError("");
+      setPassword("");
       return;
     }
     setAuthError("admin_wrong_password");
   };
+
+  useEffect(() => {
+    saveAdminAuth(isAuthorized);
+  }, [isAuthorized]);
 
   return (
     <main className="min-h-screen px-6 py-12">
@@ -75,13 +96,25 @@ export default function AdminPage({
               transition={{ duration: 0.35, ease: "easeOut" }}
               className="flex w-full flex-col gap-8"
             >
-              <header className="space-y-3 text-center">
-                <h1 className="font-serif text-4xl text-zinc-100 md:text-5xl">
-                  {t("admin_title")}
-                </h1>
-                <p className="mx-auto max-w-2xl text-base text-zinc-400 md:text-lg">
-                  {t("admin_subtitle")}
-                </p>
+              <header className="space-y-4">
+                <div className="flex flex-col gap-3 text-center md:flex-row md:items-center md:justify-between md:text-left">
+                  <div className="space-y-3">
+                    <h1 className="font-serif text-4xl text-zinc-100 md:text-5xl">
+                      {t("admin_title")}
+                    </h1>
+                    <p className="max-w-2xl text-base text-zinc-400 md:text-lg">
+                      {t("admin_subtitle")}
+                    </p>
+                  </div>
+                  <motion.button
+                    type="button"
+                    onClick={() => setIsAuthorized(false)}
+                    {...buttonMotion}
+                    className="mx-auto flex items-center justify-center rounded-xl border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-200 transition hover:border-zinc-500 hover:text-white md:mx-0"
+                  >
+                    {t("admin_logout")}
+                  </motion.button>
+                </div>
               </header>
 
               <section className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
